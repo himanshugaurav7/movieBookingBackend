@@ -1,0 +1,371 @@
+db.createUser(
+  {
+    user: "Himanshu",
+    pwd: "himanshu123",
+    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ,"readWriteAnyDatabase" ]
+  }
+)
+
+//
+mongosh --username Himanshu --password himanshu123 --authenticationDatabase admin --host localhost --port 27017
+
+zookeeper-server-start .\config\zookeeper.properties
+
+kafka-server-start .\config\server.properties
+
+
+http://localhost:9093/swagger-ui/index.html
+
+http://localhost:9093/v3/api-docs
+
+
+//
+kafka------
+1.to show the topics
+  kafka-topics.bat --bootstrap-server localhost:9092 --list
+
+2.Here's an example command to consume messages from the "movieapptopic" topic:
+  kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic movieapptopic --from-beginning
+
+3.Delete Topic: To delete a topic, you can use the following command:
+kafka-topics.bat --bootstrap-server localhost:9092 --delete --topic movieapptopic
+
+4.Console Producer: To manually produce messages to a Kafka topic from the console, you can use the following command:
+
+ans- kafka-console-producer.bat --broker-list localhost:9092 --topic movieapptopic
+
+5.Describe Topic: To get detailed information about a specific topic, you can use the following command:
+
+ans- kafka-topics.bat --bootstrap-server localhost:9092 --describe --topic movieapptopic
+
+//
+
+moviebooking> db.movie.insertOne({
+      movieName: "Matrix", 
+     theatreName: "WXYZ Theatre",
+     noOfTicketsAvailable: 1000
+    })
+{
+  acknowledged: true,
+  insertedId: ObjectId("6490b40a2ded0f5823ae9c94")
+}
+moviebooking> db.movies.find({ movieName: "The Matrix", theatreName: "WXYZ Theatre" })
+[
+  {
+    _id: ObjectId("6490b40a2ded0f5823ae9c94"),
+    movieName: 'The Matrix',
+    theatreName: 'WXYZ Theatre',
+    noOfTicketsAvailable: 1000
+  }
+]
+
+//
+#spring.data.mongodb.uri= mongodb+srv://chandankalluri9:admin@chandan-cluster.yg0csm5.mongodb.net/?retryWrites=true&w=majority
+
+spring.data.mongodb.host=localhost
+spring.data.mongodb.port=27017
+spring.data.mongodb.database=moviebooking
+spring.data.mongodb.username=Himanshu
+spring.data.mongodb.password=himanshu123
+spring.data.mongodb.authentication-database=admin
+
+# App Properties
+movieapp.app.jwtSecret= movieAppSecretKey
+movieapp.app.jwtExpirationMs= 86400000
+
+springdoc.api-docs.path=/api-docs
+
+management.endpoints.web.exposure.include=*
+
+
+# logging level
+logging.level.root=INFO
+logging.level.com.rbp=DEBUG
+logging.file.name=./movieApp.log
+
+spring.kafka.bootstrap-servers=localhost:9092
+
+server.port=9093
+
+//
+
+{
+  "loginId": "user123",
+  "movieName": "Avengers: Endgame",
+  "theatreName": "CinemaCity",
+  "noOfTickets": 2,
+  "seatNumber": ["A1", "A2"]
+}
+
+
+///////////
+
+# mongod.conf
+
+# for documentation of all options, see:
+#   http://docs.mongodb.org/manual/reference/configuration-options/
+
+# Where and how to store data.
+storage:
+  dbPath: C:\Program Files\MongoDB\Server\6.0\data
+  journal:
+    enabled: true
+#  engine:
+#  wiredTiger:
+
+# where to write logging data.
+systemLog:
+  destination: file
+  logAppend: true
+  path:  C:\Program Files\MongoDB\Server\6.0\log\mongod.log
+
+# network interfaces
+net:
+  port: 27017
+  bindIp: 127.0.0.1
+
+
+#processManagement:
+
+security:
+  authorization: enabled
+
+#operationProfiling:
+
+#replication:
+
+#sharding:
+
+## Enterprise-Only Options:
+
+#auditLog:
+
+#snmp:
+
+
+
+//
+
+//package com.rbp.movieapp.controller;
+//
+//import java.util.List;
+//
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.http.HttpStatus;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.web.bind.annotation.PathVariable;
+//import org.springframework.web.bind.annotation.PostMapping;
+//import org.springframework.web.bind.annotation.RequestBody;
+//import org.springframework.web.bind.annotation.RequestMapping;
+//import org.springframework.web.bind.annotation.RestController;
+//
+//import com.rbp.movieapp.exception.SeatAlreadyBooked;
+//import com.rbp.movieapp.models.Movie;
+//import com.rbp.movieapp.models.Ticket;
+//import com.rbp.movieapp.repository.MovieRepository;
+//import com.rbp.movieapp.repository.TicketRepository;
+//import com.rbp.movieapp.security.services.MovieService;
+//
+//import lombok.extern.slf4j.Slf4j;
+//
+//@RestController
+//@RequestMapping("/api/v1.0/moviebooking")
+//
+//@Slf4j
+//public class MovieController {
+//
+//    @Autowired
+//    private MovieService movieService;
+//    @Autowired
+//    private MovieRepository movieRepository;
+//
+//    @Autowired
+//    private TicketRepository ticketRepository;
+//
+//
+////    @Autowired
+////    private KafkaTemplate<String, Object> kafkaTemplate;
+//
+//
+//
+//    
+//    @PostMapping("/{movieName}/add")
+//    public ResponseEntity<String> bookTickets(@RequestBody Ticket ticket, @PathVariable String movieName) {
+//        log.debug(ticket.getLoginId()+" entered to book tickets");
+//        List<Ticket> allTickets = movieService.findSeats(movieName,ticket.getTheatreName());
+//        for(Ticket each : allTickets){
+//            for(int i = 0; i < ticket.getNoOfTickets(); i++){
+//                if(each.getSeatNumber().contains(ticket.getSeatNumber().get(i))){
+//                    log.debug("seat is already booked");
+//                    throw new SeatAlreadyBooked("Seat number "+ticket.getSeatNumber().get(i)+" is already booked");
+//                }
+//            }
+//        }
+//
+//        if(movieService.findAvailableTickets(movieName,ticket.getTheatreName()).get(0).getNoOfTicketsAvailable() >=
+//                ticket.getNoOfTickets()){
+//
+//            log.info("available tickets "
+//                    +movieService.findAvailableTickets(movieName,ticket.getTheatreName()).get(0).getNoOfTicketsAvailable());
+//            movieService.saveTicket(ticket);
+//            log.debug(ticket.getLoginId()+" booked "+ticket.getNoOfTickets()+" tickets");
+////            kafkaTemplate.send(topic.name(),"Movie ticket booked. " +
+////                    "Booking Details are: "+
+////            ticket);
+////          updateAvailableTickectsInMovie(movieName,ticket.getTheatreName(),ticket.getNoOfTickets());
+//            List<Movie> movies = movieRepository.findByMovieName(movieName);
+//            int available_tickets = 0;
+//            for (Movie movie : movies) {
+//                available_tickets = movie.getNoOfTicketsAvailable() - ticket.getNoOfTickets();
+//                movie.setNoOfTicketsAvailable(available_tickets);
+//                movieService.saveMovie(movie);
+//            }
+//            return new ResponseEntity<>("Tickets Booked Successfully with seat numbers"+ticket.getSeatNumber(),HttpStatus.OK);
+//        }
+//        else{
+//            log.debug("tickets sold out");
+//            return new ResponseEntity<>("\"All tickets sold out\"",HttpStatus.OK);
+//        }
+//    }
+//
+//    
+//}
+
+
+
+
+
+
+
+
+
+
+
+//correct
+package com.rbp.movieapp.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.rbp.movieapp.exception.MoviesNotFound;
+import com.rbp.movieapp.exception.SeatAlreadyBooked;
+import com.rbp.movieapp.models.Movie;
+import com.rbp.movieapp.models.Ticket;
+import com.rbp.movieapp.repository.MovieRepository;
+import com.rbp.movieapp.repository.TicketRepository;
+import com.rbp.movieapp.security.services.MovieService;
+
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@RequestMapping("/api/v1.0/moviebooking")
+@Slf4j
+public class MovieController {
+
+    @Autowired
+    private MovieService movieService;
+    
+    @Autowired
+    private MovieRepository movieRepository;
+
+    @Autowired
+    private TicketRepository ticketRepository;
+
+    //working
+    @PostMapping("/{movieName}/add")
+    public ResponseEntity<String> bookTickets(@RequestBody Ticket ticket, @PathVariable String movieName) {
+        log.debug(ticket.getLoginId() + " entered to book tickets");
+        
+        List<Ticket> allTickets = movieService.findSeats(movieName, ticket.getTheatreName());
+        for (Ticket each : allTickets) {
+            for (int i = 0; i < ticket.getNoOfTickets(); i++) {
+                if (each.getSeatNumber().contains(ticket.getSeatNumber().get(i))) {
+                    log.debug("seat is already booked");
+                    throw new SeatAlreadyBooked("Seat number " + ticket.getSeatNumber().get(i) + " is already booked");
+                }
+            }
+        }
+
+        List<Movie> availableMovies = movieService.findAvailableTickets(movieName, ticket.getTheatreName());
+       
+        System.out.println("Available Movies: " + availableMovies); // Debugging statement
+        System.out.println("Requested Number of Tickets: " + ticket.getNoOfTickets()); // Debugging statement
+        if (!availableMovies.isEmpty() && availableMovies.get(0).getNoOfTicketsAvailable() >= ticket.getNoOfTickets()) {
+            movieService.saveTicket(ticket);
+            log.debug(ticket.getLoginId() + " booked " + ticket.getNoOfTickets() + " tickets");
+
+            int availableTickets = availableMovies.get(0).getNoOfTicketsAvailable() - ticket.getNoOfTickets();
+            availableMovies.get(0).setNoOfTicketsAvailable(availableTickets);
+            movieService.saveMovie(availableMovies.get(0));
+
+            return new ResponseEntity<>("Tickets Booked Successfully with seat numbers: " + ticket.getSeatNumber(), HttpStatus.OK);
+        } else {
+            log.debug("tickets sold out");
+            return new ResponseEntity<>("All tickets sold out", HttpStatus.OK);
+        }
+    }
+    
+    
+    @PostMapping("/addmovie")
+    public ResponseEntity<String> addMovie(@RequestBody Movie movie) {
+        movieService.saveMovie(movie);
+        log.debug("Movie added: " + movie.getMovieName());
+        return new ResponseEntity<>("Movie added successfully", HttpStatus.OK);
+    }
+    
+    
+    
+    
+    
+    //not working
+//    @PostMapping("/{movieName}/add")
+//    public ResponseEntity<String> bookTickets(@RequestBody Ticket ticket, @PathVariable String movieName) {
+//        log.debug(ticket.getLoginId() + " entered to book tickets");
+//
+//        List<Ticket> allTickets = movieService.findSeats(movieName, ticket.getTheatreName());
+//        for (Ticket each : allTickets) {
+//            for (int i = 0; i < ticket.getNoOfTickets(); i++) {
+//                if (each.getSeatNumber().contains(ticket.getSeatNumber().get(i))) {
+//                    log.debug("seat is already booked");
+//                    throw new SeatAlreadyBooked("Seat number " + ticket.getSeatNumber().get(i) + " is already booked");
+//                }
+//            }
+//        }
+//
+//        List<Movie> availableMovies = movieService.findAvailableTickets(movieName, ticket.getTheatreName());
+//        if (availableMovies.isEmpty()) {
+//            log.debug("movie not found");
+//            throw new MoviesNotFound("Movie " + movieName + " is not available");
+//        }
+//
+//        Movie selectedMovie = availableMovies.get(0);
+//        if (selectedMovie.getNoOfTicketsAvailable() < ticket.getNoOfTickets()) {
+//            log.debug("tickets sold out");
+//            return new ResponseEntity<>("All tickets sold out", HttpStatus.OK);
+//        }
+//
+//        movieService.saveTicket(ticket);
+//        log.debug(ticket.getLoginId() + " booked " + ticket.getNoOfTickets() + " tickets");
+//
+//        int availableTickets = selectedMovie.getNoOfTicketsAvailable() - ticket.getNoOfTickets();
+//        selectedMovie.setNoOfTicketsAvailable(availableTickets);
+//        movieService.saveMovie(selectedMovie);
+//
+//        return new ResponseEntity<>("Tickets Booked Successfully with seat numbers: " + ticket.getSeatNumber(), HttpStatus.OK);
+//    }
+
+    
+    
+    
+}
+
+
+//
